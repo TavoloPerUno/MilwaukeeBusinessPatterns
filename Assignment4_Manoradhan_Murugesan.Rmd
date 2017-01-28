@@ -1,0 +1,119 @@
+---
+title: "Global Spatial Autocorrelation"
+author: "Manoradhan Murugesan"
+date: "11/6/2016"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, tidy.opts=list(width.cutoff=80),tidy=TRUE)
+```
+
+## Overview and Data Sources
+
+Global Spatial Autocorrelation is a measure of the overall clustering of the data. Moran's I and Geary's C are the statistics used in this assignment to estimate Global Spatial Autocorrelation in 1998 and 2001 Zip Code Business Patterns dataset for Milwaukee, sourced from The Center for Spatial Data Science, for total office establishments in 1998 and 2001 (OFF98 and OFF01). 
+
+```{r results='hide', echo=FALSE, message=FALSE, warning=FALSE}
+library(foreign)
+library(spdep)
+
+setwd("~/Documents/RWorkspace/Spatial Analytics/MilwaukeeMSA2")
+
+dat <- read.dbf("MilwaukeeMSA2.dbf")
+
+attach(dat)
+
+nbq <- read.gal("MilwaukeeMSA2_q.gal",override.id=T)
+
+nbr <- read.gal("MilwaukeeMSA2_r.gal",override.id=T)
+
+nbd <- read.gwt2nb("MilwaukeeMSA2_d.gwt",region.id = dat$ZIP)
+
+
+wq <- nb2listw(nbq) 
+
+wr <- nb2listw(nbr) 
+
+wd <- nb2listw(nbd) 
+```
+
+## Moran Scatter Plots and Geary's C
+### Queen contiguity weights
+#### OFF98
+$$\includegraphics[height=290pt]{OFF98_q.png}$$
+$$\includegraphics[height=290pt]{OFF98_q_z.png}$$
+
+```{r echo=FALSE}
+moran.test(OFF98,wq, na.action=na.omit, zero.policy = TRUE)
+geary.test(OFF98,wq,alternative="two.sided", zero.policy = TRUE)
+```
+
+### OFF01
+$$\includegraphics[height=290pt]{OFF01_q.png}$$
+$$\includegraphics[height=290pt]{OFF01_q_z.png}$$
+
+```{r echo=FALSE}
+moran.test(OFF01,wq, na.action=na.omit, zero.policy = TRUE)
+geary.test(OFF01,wq,alternative="two.sided")
+```
+
+### Rook contiguity weights
+#### OFF98
+$$\includegraphics[height=290pt]{OFF98_r.png}$$
+$$\includegraphics{OFF98_r_z.png}$$
+
+```{r echo=FALSE}
+moran.test(OFF98,wr, na.action=na.omit, zero.policy = TRUE)
+geary.test(OFF98,wr,alternative="two.sided", zero.policy = TRUE)
+```
+
+### OFF01
+$$\includegraphics[height=290pt]{OFF01_r.png}$$
+$$\includegraphics{OFF01_r_z.png}$$
+
+```{r echo=FALSE}
+moran.test(OFF01,wr, na.action=na.omit, zero.policy = TRUE)
+geary.test(OFF01,wr,alternative="two.sided", zero.policy = TRUE)
+```
+
+### Distance band weights
+#### OFF98
+$$\includegraphics[height=290pt]{OFF98_d.png}$$
+$$\includegraphics{OFF98_d_z.png}$$
+
+```{r echo=FALSE}
+moran.test(OFF98,wd, na.action=na.omit, zero.policy = TRUE)
+geary.test(OFF98,wd,alternative="two.sided", zero.policy = TRUE)
+```
+
+### OFF01
+$$\includegraphics[height=290pt]{OFF01_d.png}$$
+$$\includegraphics{OFF01_d_z.png}$$
+
+```{r echo=FALSE}
+moran.test(OFF01,wd, na.action=na.omit, zero.policy = TRUE)
+geary.test(OFF01,wd,alternative="two.sided", zero.policy = TRUE)
+```
+
+## Ranges of Interaction
+## OFF98
+
+The range of interaction is found to be 0.2357295.
+$$\includegraphics[height=290pt]{OFF98_2357295.png}$$
+
+## OFF01
+
+The range of interaction is found to be 0.2544655.
+$$\includegraphics[height=290pt]{OFF01_2544655.png}$$
+
+## Structual breaks
+Lowless smoothers reveal structural breaks in Moran Scatter plots. Both OFF98 and OFF01 have similar structural breaks with Queen and Rook weights. The lowless smoother is more or less flat for distance band weights, moreover its Moran's I statistic is not significant at 0.01 level.
+
+$$\includegraphics[height=290pt]{neg_off98.png}$$
+
+The corresponding data points for the zone with negative spatial autocorrelation are found to be surrounded by lower quantile zones.
+
+$$\includegraphics[height=290pt]{neg_zones.png}$$
+
+## Strengh of spatial autocorrelation across the weights
+Both the variables have highly significant Moran's I values for rook and queen weights, revealing a low positive spatial autocorrelation. The Geary's C value is not significant for both these variables. This can be explained by Geary's C's lower power to reject the null hypothesis for low positive spatial autocorrelation. The distance band weights result in insignificant I and C Values. This can be explained by the presence of larger spatial units with less neighbours, restricted by distances from their centroids. An interesting observation in the Moran's plot for distance band weights is the placement of downtown Milwaukee in high-low quadrant, which is a negative autocorrelation zone. This is because, its small size coupled with the distance threshold decided by the largest zipcode block results in a large neighbour list of markedly different zipcodes.
